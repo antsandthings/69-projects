@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>69 Projects</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light only;
+    }
+    html, body { height: 100%; }
+    body { font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+    /* Soft scroll and subtle focus */
+    html { scroll-behavior: smooth; }
+    .focus-ring:focus-visible { outline: 3px solid rgba(255,255,255,.8); outline-offset: 2px; border-radius: .5rem; }
+    /* Card entrance animation */
+    @keyframes pop {
+      0% { transform: translateY(8px) scale(.98); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .animate-pop { animation: pop .5s cubic-bezier(.2,.8,.2,1) both; }
+    /* Hide scrollbar in tag scrollers (preserve scroll) */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Modal backdrop fade */
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+    .backdrop-show { animation: fadeIn .2s ease-out both; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-fuchsia-900 to-emerald-900 text-white">
+  <div class="max-w-7xl mx-auto px-5 py-8 md:py-12">
+    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+      <div>
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          69 Projects
+        </h1>
+        <p class="text-white/80 mt-2 md:mt-3 max-w-2xl">
+          Explore your 69 projects in a colorful grid. Search by text, filter by tags, and open details without leaving the page.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="clearFiltersBtn" class="focus-ring rounded-xl bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 font-semibold shadow-lg shadow-black/10 transition">
+          Clear filters
+        </button>
+        <button id="shuffleBtn" class="focus-ring rounded-xl bg-white text-indigo-900 hover:bg-amber-300 px-4 py-2.5 font-extrabold shadow-lg transition">
+          Shuffle
+        </button>
+      </div>
+    </header>
+
+    <section id="showcase" class="mt-8 hidden">
+      </section>
+
+    <section class="mt-8 grid gap-4 md:grid-cols-3">
+      <div class="md:col-span-2">
+        <label for="searchInput" class="block text-sm font-semibold mb-2 text-white/90">Search projects</label>
+        <div class="relative">
+          <input id="searchInput" type="text" placeholder="Search names, one-liners, domains, briefs..."
+                 class="w-full rounded-2xl bg-white/10 placeholder-white/60 text-white px-5 py-3.5 pr-12 outline-none ring-2 ring-white/10 focus:ring-white/30 transition">
+          <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/70">⌘K</span>
+        </div>
+      </div>
+      <div>
+        <label for="tagSearchInput" class="block text-sm font-semibold mb-2 text-white/90">Find a tag</label>
+        <input id="tagSearchInput" type="text" placeholder="Type to filter tags..."
+               class="w-full rounded-2xl bg-white/10 placeholder-white/60 text-white px-5 py-3.5 outline-none ring-2 ring-white/10 focus:ring-white/30 transition">
+      </div>
+    </section>
+
+    <section class="mt-5">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-sm font-semibold text-white/90">Popular tags</h2>
+        <div class="text-xs text-white/70">Click tags to filter. Click again to unselect.</div>
+      </div>
+      <div id="tagsWrap" class="no-scrollbar overflow-auto flex gap-2.5 py-1">
+        </div>
+    </section>
+
+    <section id="activeFilters" class="mt-4 hidden">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs uppercase tracking-wider text-white/70">Active:</span>
+        <div id="activeTagChips" class="flex flex-wrap gap-2"></div>
+      </div>
+    </section>
+
+    <section class="mt-6 flex items-center justify-between">
+      <div class="text-sm text-white/80">
+        <span id="resultCount" class="font-semibold">0</span> projects
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <label class="text-white/75">Sort</label>
+        <select id="sortSelect" class="rounded-xl bg-white/10 text-white px-3 py-2 ring-2 ring-white/10 focus:ring-white/30 outline-none">
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+          <option value="domain-asc">Domain A–Z</option>
+          <option value="domain-desc">Domain Z–A</option>
+        </select>
+      </div>
+    </section>
+
+    <main id="grid" class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      </main>
+
+    <section id="emptyState" class="hidden mt-10 text-center">
+      <div class="inline-flex items-center gap-3 rounded-2xl bg-white/5 px-5 py-4 ring-1 ring-white/10">
+        <span class="text-2xl">🔎</span>
+        <div class="text-left">
+          <div class="font-bold">No results match your filters</div>
+          <div class="text-white/75 text-sm">Try clearing filters or using a broader search.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="modal" class="fixed inset-0 z-50 hidden">
+    <div id="modalBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm backdrop-show"></div>
+    <div class="relative h-full w-full flex items-center justify-center p-6">
+      <div class="w-full max-w-2xl rounded-3xl bg-white text-slate-900 shadow-2xl overflow-hidden">
+        <div class="bg-gradient-to-r from-fuchsia-500 via-amber-400 to-emerald-400 h-2"></div>
+        <div class="p-6 md:p-8">
+          <div class="flex items-start justify-between gap-6">
+            <div>
+              <h3 id="modalTitle" class="text-2xl md:text-3xl font-extrabold"></h3>
+              <p id="modalOneLiner" class="mt-1.5 text-slate-700"></p>
+            </div>
+            <button id="modalClose" class="focus-ring shrink-0 rounded-full bg-slate-900 text-white w-10 h-10 grid place-items-center hover:bg-slate-700 transition" aria-label="Close">
+              ✕
+            </button>
+          </div>
+
+          <div class="mt-5">
+            <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Concept Brief</div>
+            <p id="modalBrief" class="leading-relaxed text-slate-800"></p>
+          </div>
+
+          <div class="mt-6 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-slate-200 p-4">
+              <div class="text-xs uppercase tracking-wider text-slate-500">Domain</div>
+              <div class="mt-1.5 flex items-center justify-between gap-3">
+                <code id="modalDomain" class="font-semibold text-slate-900"></code>
+                <div class="flex items-center gap-2">
+                  <button id="modalCopy" class="rounded-lg bg-slate-900 text-white text-sm px-3 py-1.5 hover:bg-slate-700 transition">Copy</button>
+                  <a id="modalVisit" target="_blank" rel="noopener noreferrer" class="rounded-lg bg-slate-100 text-slate-900 text-sm px-3 py-1.5 hover:bg-slate-200 transition">Open</a>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 p-4">
+              <div class="text-xs uppercase tracking-wider text-slate-500">Tags</div>
+              <div id="modalTags" class="mt-2 flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-slate-50 px-6 md:px-8 py-4 flex items-center justify-between">
+          <div class="text-sm text-slate-600">Tip: Click any tag to filter the grid.</div>
+          <button id="modalFilterBtn" class="rounded-lg bg-slate-900 text-white text-sm px-3 py-1.5 hover:bg-slate-700 transition">Filter by these tags</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- DATA ---
+    const projects = [
+      {
+        id: "p1",
+        name: "24h Full Power",
+        oneLiner: "The branding for a lifestyle of sustained, high-level performance and motivation.",
+        brief: "'24h Full Power' is a marketing slogan and brand identity for products designed to unlock continuous energy and drive. It targets high-achievers, athletes, and professionals, promising them the resources—be it a supplement, app, or service—to maintain peak performance around the clock.",
+        domain: "24hfullpower.com",
+        tags: ["Branding", "Slogan", "Performance", "Energy"]
+      },
+      {
+        id: "p2",
+        name: "24 Hour Full Power",
+        oneLiner: "An explicit promise of around-the-clock energy and endurance.",
+        brief: "A more direct variation of its predecessor, '24 Hour Full Power' is a slogan that leaves no room for ambiguity. It is used to brand products that guarantee long-lasting, reliable performance, appealing to consumers who value clarity and proven results.",
+        domain: "24hourfullpower.com",
+        tags: ["Branding", "Slogan", "Performance", "Energy"]
+      },
+      {
+        id: "p3",
+        name: "Ad8d",
+        oneLiner: "An application that creates a command center of eight media streams on a single screen.",
+        brief: "Ad8d is a professional-grade software tool designed for high-information environments. It allows users to create, manage, and monitor eight simultaneous media streams, from video feeds to data analytics, making it an essential tool for traders, content creators, and security personnel.",
+        domain: "ad8d.com",
+        tags: ["App", "Tool", "Productivity", "Media"]
+      },
+      {
+        id: "p4",
+        name: "Aisexuals",
+        oneLiner: "The term defining a new frontier of attraction in the age of artificial intelligence.",
+        brief: "'Aisexuals' is the term for people who experience attraction to artificial intelligence. As AI becomes more sophisticated and integrated into our lives, this concept explores the evolving nature of connection, relationships, and identity in a post-human world.",
+        domain: "aisexuals.com",
+        tags: ["Lexicon", "AI", "Culture", "Society"]
+      },
+      {
+        id: "p5",
+        name: "Armageddon Countdown",
+        oneLiner: "A narrative device or game that builds suspense by tracking the final moments before a global catastrophe.",
+        brief: "The 'Armageddon Countdown' is a high-stakes concept for a game, film, or series. The entire experience is structured around a ticking clock leading to a world-ending event, creating a powerful sense of tension and forcing characters to make profound choices under ultimate pressure.",
+        domain: "armageddoncountdown.com",
+        tags: ["Media", "Game", "Film", "Storytelling"]
+      },
+      {
+        id: "p6",
+        name: "Art is Utility",
+        oneLiner: "A philosophy and movement arguing that art’s true value is in its function, not just its form.",
+        brief: "'Art is Utility' is a slogan for a movement that redefines aesthetics. It posits that the most profound art is that which serves a purpose, has a tangible use in society, and whose core beauty lies in its concept and action, rather than its purely visual qualities.",
+        domain: "artisutility.com",
+        tags: ["Philosophy", "Art", "Movement", "Culture"]
+      },
+      {
+        id: "p7",
+        name: "Asteroid Countdown",
+        oneLiner: "A real-time dashboard tracking humanity's statistical odds against cosmic impact.",
+        brief: "'Asteroid Countdown' is a live data platform that references the real-life chances of a celestial impact. It provides a live countdown and percentage probability for the next significant Near-Earth Object (NEO) approach to both Earth and Luna, using publicly available data from astronomical agencies. It transforms abstract risk into a tangible, constantly updated dashboard.",
+        domain: "asteroidcountdown.com",
+        tags: ["Data", "Science", "Tool", "Web"]
+      },
+      {
+        id: "p8",
+        name: "Audiough",
+        oneLiner: "A slang term for money, born from the fusion of music, audio, and creative value.",
+        brief: "'Audiough' is a niche slang term for money, conceptualized as creating value ('dough') from audio and music. The term captures the spirit of the creator economy, where artistic output is directly transformed into financial capital.",
+        domain: "audiough.com",
+        tags: ["Lexicon", "Slang", "Music", "Culture"]
+      },
+      {
+        id: "p9",
+        name: "Bubble Pump",
+        oneLiner: "A satirical game and financial term for the act of trading and creating speculative bubbles.",
+        brief: "'Bubble Pump' is a game that simulates the absurdity of speculative markets by having players trade ephemeral 'bubbles.' The term also functions as financial slang to describe the process of artificially inflating a new, volatile asset, capturing the hype and risk involved.",
+        domain: "bubblepump.com",
+        tags: ["Game", "Finance", "Satire", "Lexicon"]
+      },
+      {
+        id: "p10",
+        name: "Buy Back The Dip",
+        oneLiner: "A savvy market phrase that acknowledges the volatility of 'buying the dip.'",
+        brief: "'Buy Back The Dip' is a play on the common trading advice, 'buy the dip.' It serves as a more nuanced commentary on market strategy, acknowledging the constant flux and inherent risks of investing in volatile assets, promoting a smarter, more reactive approach.",
+        domain: "buybackthedip.com",
+        tags: ["Finance", "Lexicon", "Crypto", "Strategy"]
+      },
+      {
+        id: "p11",
+        name: "Charityverse",
+        oneLiner: "A shared digital metaverse for non-profits to collaborate and amplify their impact.",
+        brief: "The 'Charityverse' is a virtual platform designed for the non-profit sector. It provides a space where different charities can share aims, co-host fundraising events, and pool resources, leveraging digital technology to create a unified and more efficient front for global change.",
+        domain: "charityverse.com",
+        tags: ["Web", "Platform", "Charity", "Metaverse"]
+      },
+      {
+        id: "p12",
+        name: "Corridoors",
+        oneLiner: "A game of pure imagination where every door is a portal to manifesting your best life.",
+        brief: "'Corridoors' is a creative game based on imaginative choice. The core rule is that every time a player goes through a door, they frame that doorway as a positive engine to quantum leap into their best life. Each choice is an act of manifestation, turning a simple game into a powerful tool for personal transformation and conscious reality-creation.",
+        domain: "corridoors.com",
+        tags: ["Game", "Philosophy", "Wellness", "Storytelling"]
+      },
+      {
+        id: "p13",
+        name: "Corridoor The Game",
+        oneLiner: "The official title for a game based on imaginative, door-based choices.",
+        brief: "This is a more formal title for the 'Corridoors' concept. It frames the imaginative exercise as a structured game, suitable for a mobile app or a boxed set with prompt cards to guide the players' creative journeys through infinite doors.",
+        domain: "corridoorthegame.com",
+        tags: ["Game", "Product", "App", "Storytelling"]
+      },
+      {
+        id: "p14",
+        name: "Countdown Armageddon",
+        oneLiner: "A media franchise title centered on the final countdown to a global apocalypse.",
+        brief: "'Countdown Armageddon' is a strong, marketable title for a game, film, or book series. It immediately communicates a theme of high-stakes, end-of-the-world suspense, focusing on the human drama that unfolds as time runs out.",
+        domain: "countdownarmageddon.com",
+        tags: ["Media", "Game", "Film", "Branding"]
+      },
+      {
+        id: "p15",
+        name: "Daorupt",
+        oneLiner: "A new verb for disruption, powered by decentralized, autonomous organizations (DAOs).",
+        brief: "'Daorupt' is a portmanteau of DAO and disrupt. It describes the act of challenging and transforming traditional industries not just with new technology, but with a new, community-driven and transparent organizational structure.",
+        domain: "daorupt.com",
+        tags: ["Lexicon", "Web3", "Crypto", "Business"]
+      },
+      {
+        id: "p16",
+        name: "Daoruption",
+        oneLiner: "The term for the great decentralization of business, collaboration, and governance.",
+        brief: "'Daoruption' (Disruption = Daoruption) defines the paradigm shift towards decentralized business practices. It represents the move away from hierarchical structures to community-driven, transparent, and autonomous models of operation, fundamentally changing how we think about companies and co-ops.",
+        domain: "daoruption.com",
+        tags: ["Lexicon", "Web3", "Business", "Society"]
+      },
+      {
+        id: "p17",
+        name: "Datafesto",
+        oneLiner: "A modern manifesto that uses data to chart a transparent and ethical course for the future.",
+        brief: "A 'Datafesto' is a public declaration of principles for the information age. It replaces outdated mission statements with a commitment to data ethics, privacy, and transparency, serving as a company's promise to use information responsibly as it moves from a problematic past into the future.",
+        domain: "datafesto.com",
+        tags: ["Data", "Ethics", "Business", "Lexicon"]
+      },
+      {
+        id: "p18",
+        name: "Decide The Ride",
+        oneLiner: "A game of chance and a philosophy on embracing life's unpredictability.",
+        brief: "'Decide The Ride' is a game based on making high-stakes choices where the outcome is left to fate. The name also functions as a popular phrase, encouraging an acceptance of the unknown and the courage to make a choice, even when the destination is uncertain.",
+        domain: "decidetheride.com",
+        tags: ["Game", "Philosophy", "Slogan", "Culture"]
+      },
+      {
+        id: "p19",
+        name: "Deeps Different",
+        oneLiner: "A phrase used to describe an experience that is profoundly and emotionally resonant.",
+        brief: "A play on the slang 'hits different,' 'Deeps Different' is reserved for moments, art, or connections that involve deep emotions. It distinguishes a superficial feeling from a truly significant one, signifying a powerful and memorable impact.",
+        domain: "deepsdifferent.com",
+        tags: ["Lexicon", "Slang", "Culture", "Emotion"]
+      },
+      {
+        id: "p20",
+        name: "Don't Deep It",
+        oneLiner: "A motivational slogan for letting go of overthinking and embracing action.",
+        brief: "'Don't Deep It' is a modern mantra for a better life. It serves as a reminder to avoid getting caught in analysis paralysis or overly deep thought, encouraging a more straightforward, present, and active approach to solving problems and enjoying life.",
+        domain: "dontdeepit.com",
+        tags: ["Slogan", "Wellness", "Lexicon", "Philosophy"]
+      },
+      {
+        id: "p21",
+        name: "Doors The Game",
+        oneLiner: "A game where every door is a framed opportunity to leap into a better reality.",
+        brief: "'Doors The Game' is a variation of the 'Corridoors' concept, focused on positive manifestation. Its gameplay is entirely centered on the act of choosing a door and using it as a frame to visualize and quantum leap into a desired reality, making it a powerful engine for personal growth.",
+        domain: "doorsthegame.com",
+        tags: ["Game", "Wellness", "Philosophy", "App"]
+      },
+      {
+        id: "p22",
+        name: "Door The Game",
+        oneLiner: "A singular focus on the next choice, the next door, the next quantum leap.",
+        brief: "This variation of the game emphasizes a more focused, singular experience. Each round is 'Door: The Game,' highlighting the importance of each choice as a powerful act of framing your reality and a chance to consciously leap into your best life.",
+        domain: "doorthegame.com",
+        tags: ["Game", "Wellness", "Philosophy", "Minimalism"]
+      },
+      {
+        id: "p23",
+        name: "Dopamemes",
+        oneLiner: "The term for the biological effect of screen light on your energy and sleep cycles.",
+        brief: "'Dopamemes' describes the real-life effect of specific light frequencies on the brain's dopamine production. It refers to the phenomenon of a blue screen providing energy to wake you up, while warmer tones at night have the opposite effect. A project based on this could be a wellness app that adjusts screen colour to regulate energy or an educational platform on digital well-being.",
+        domain: "dopamemes.com",
+        tags: ["Lexicon", "Science", "Wellness", "Tech"]
+      },
+      {
+        id: "p24",
+        name: "Dripp Dropp",
+        oneLiner: "A modern, catchy, and memorable brand name ready for the youth market.",
+        brief: "'Dripp Dropp' is a brand name designed for high recall and trendiness. Its rhythmic, playful sound makes it highly suitable for a fashion line ('drip'), a beverage ('drop'), or any consumer product aiming for a vibrant, contemporary identity.",
+        domain: "drippdropp.com",
+        tags: ["Branding", "Product", "Fashion", "Lifestyle"]
+      },
+      {
+        id: "p25",
+        name: "Duct-taped",
+        oneLiner: "A term for the comedic absurdity of the art world and an app for digitally fixing anything.",
+        brief: "'Duct-taped' has two applications. It's a phrase describing the often bizarre, patched-together, and comedic effects seen in the high-concept art world. It's also the name of a creative mobile app that lets users digitally slap duct tape on anything, from photos to screenshots.",
+        domain: "ductaped.com",
+        tags: ["Art", "Satire", "App", "Tool"]
+      },
+      {
+        id: "p26",
+        name: "Fate or Fortune",
+        oneLiner: "A narrative-driven game where every choice you make shapes your ultimate destiny.",
+        brief: "'Fate or Fortune' is a game where the player's primary objective is to choose their own path. It is a deeply interactive experience where every decision carries significant weight, leading to branching pathways and multiple outcomes determined by a mix of player agency and chance.",
+        domain: "fateorfortune.com",
+        tags: ["Game", "Storytelling", "RPG", "Interactive"]
+      },
+      {
+        id: "p27",
+        name: "Gift It Forwards",
+        oneLiner: "A social philosophy that champions selfless generosity with no expectation of return.",
+        brief: "'Gift It Forwards' is a movement that re-frames 'pay it forward' by removing the transactional element. It focuses on the pure act of giving a gift—be it a physical item, a kind word, or a favor—simply for the joy of giving, fostering a culture of unconditional generosity.",
+        domain: "giftitforwards.com",
+        tags: ["Philosophy", "Movement", "Charity", "Society"]
+      },
+      {
+        id: "p28",
+        name: "Globalfication",
+        oneLiner: "The term for the dual effect of global connection and global gentrification.",
+        brief: "'Globalfication' describes the phenomenon of our world getting smaller through the rapid spread of information, which simultaneously leads to a form of cultural and economic gentrification on a global scale. It highlights both the benefits of connection and the perils of homogenization.",
+        domain: "globalfication.com",
+        tags: ["Lexicon", "Society", "Economics", "Culture"]
+      },
+      {
+        id: "p29",
+        name: "Hits Deeper",
+        oneLiner: "A powerful tagline for a product that offers a more profound and superior experience.",
+        brief: "'Hits Deeper' is a marketing tagline used to signify that a product is better than its competition on a more fundamental level. It promises not just better features, but a more significant emotional or functional impact that resonates with the user.",
+        domain: "hitsdeeper.com",
+        tags: ["Slogan", "Branding", "Marketing", "Product"]
+      },
+      {
+        id: "p30",
+        name: "Hodl Sport",
+        oneLiner: "A competitive game of digital endurance that tracks the world's most dormant crypto fortunes.",
+        brief: "'Hodl Sport' is a new type of competitive game where the main objective is to see who can 'hodl' for the longest time. The platform also features a live leaderboard of the most dormant real-world cryptocurrency addresses, turning the legendary patience of early adopters into a spectator sport.",
+        domain: "hodlsport.com",
+        tags: ["Game", "Crypto", "Data", "Finance"]
+      },
+      {
+        id: "p31",
+        name: "Hubris Check",
+        oneLiner: "An app that acts as a pocket philosopher, promoting mindfulness to keep your ego in check.",
+        brief: "'Hubris Check' is a self-awareness application that functions like a 'mini Marcus Aurelius in your ear.' It prompts users to reflect on their experiences in real-time, offering perspective to foster humility and prevent arrogance. It is a tool for personal growth in a world that often encourages overconfidence.",
+        domain: "hubrischeck.com",
+        tags: ["App", "Wellness", "Philosophy", "Tool"]
+      },
+      {
+        id: "p32",
+        name: "Just Lost The Game",
+        oneLiner: "The name for a project based on the internet's oldest and most inescapable meta-game.",
+        brief: "'Just Lost The Game' is a concept that directly references 'The Game,' the perpetual mind game where the goal is to not think about it. Any project with this title—be it a short film, an art piece, or a social experiment—instantly engages anyone familiar with the rules and makes them a participant.",
+        domain: "justlosthegame.com",
+        tags: ["Meme", "Culture", "Game", "Art"]
+      },
+      {
+        id: "p33",
+        name: "Lazy Quick",
+        oneLiner: "A slogan for the new era of AI-powered efficiency: wait long, finish fast.",
+        brief: "'Lazy Quick' is a slogan that perfectly captures a modern work strategy enabled by AI. It describes the process of gaining knowledge and context over time ('lazy') while using the power of artificial intelligence to execute the final task with incredible speed ('quick').",
+        domain: "lazyquick.com",
+        tags: ["Slogan", "AI", "Productivity", "Lexicon"]
+      },
+      {
+        id: "p34",
+        name: "Lovevolutions",
+        oneLiner: "A brand of artisanal chocolates and snacks so delicious they cause a 'lovelution of the soul.'",
+        brief: "'Lovevolutions' is a brand of physical food products, specializing in high-end chocolates and snacks. The brand's mission is to create treats so exquisitely tasty and crafted with such care that the experience of eating them becomes a transcendent, soul-lifting event—a 'lovelution.'",
+        domain: "lovevolutions.com",
+        tags: ["Product", "Branding", "Food", "Lifestyle"]
+      },
+      {
+        id: "p35",
+        name: "Make Save Enjoy",
+        oneLiner: "A simple but powerful philosophy for a balanced and fulfilling lifestyle.",
+        brief: "'Make Save Enjoy' is a life philosophy that advocates for a harmonious balance between three key pillars: the act of creation and work (Make), the wisdom of financial prudence (Save), and the importance of personal happiness and leisure (Enjoy).",
+        domain: "makesaveenjoy.com",
+        tags: ["Philosophy", "Lifestyle", "Wellness", "Slogan"]
+      },
+      {
+        id: "p36",
+        name: "Makesavenjoy",
+        oneLiner: "The slogan that encapsulates a philosophy of balanced living.",
+        brief: "'Makesavenjoy' is the condensed, brandable slogan for the 'Make Save Enjoy' philosophy. It's a memorable and modern-sounding word that represents a holistic approach to a happy and productive life.",
+        domain: "makesavenjoy.com",
+        tags: ["Branding", "Slogan", "Philosophy", "Lifestyle"]
+      },
+      {
+        id: "p37",
+        name: "Mathifest",
+        oneLiner: "A modern slogan for manifesting a better future through logic and wisdom.",
+        brief: "'Mathifest' is a forward-thinking evolution of the word 'manifest.' It champions a proactive approach to achieving goals that is grounded not just in belief, but in knowledge, wisdom, and the elegant logic of mathematics.",
+        domain: "mathifest.com",
+        tags: ["Slogan", "Lexicon", "Philosophy", "Science"]
+      },
+      {
+        id: "p38",
+        name: "Mathifesto",
+        oneLiner: "A new form of manifesto that argues its points with a factual collection of scientific data and mathematical principles.",
+        brief: "A 'Mathifesto' is a declaration of principles backed by empirical evidence. It replaces emotional appeals and rhetoric with a factual collection of data, science-based facts, and mathematical principles, creating a uniquely powerful and verifiable argument.",
+        domain: "mathifesto.com",
+        tags: ["Lexicon", "Science", "Data", "Philosophy"]
+      },
+      {
+        id: "p39",
+        name: "Meme Bozle",
+        oneLiner: "A nostalgic party game that channels the fun of 90s sitcom board games into the world of memes.",
+        brief: "'Meme Bozle' is a physical board game or app that references the fun of classic 90s games, often seen in sitcoms. Players use meme cards to navigate situations, create funny scenarios, and 'bozle' (a playful term for bamboozle) their opponents, all with a retro, feel-good aesthetic.",
+        domain: "memebozle.com",
+        tags: ["Game", "Meme", "Nostalgia", "Satire"]
+      },
+      {
+        id: "p40",
+        name: "Meme Checkpoint",
+        oneLiner: "A tribute game that celebrates the history and impact of the internet's earliest memes.",
+        brief: "'Meme Checkpoint' is a game created as a nostalgic homage to the foundational memes of internet culture. It offers a trip down memory lane for internet veterans and an educational, interactive history lesson for newcomers, celebrating the memes that started it all.",
+        domain: "memecheckpoint.com",
+        tags: ["Game", "Meme", "Nostalgia", "Culture"]
+      },
+      {
+        id: "p41",
+        name: "Meme Pionts",
+        oneLiner: "The official in-game currency for the burgeoning meme game economy.",
+        brief: "'Meme Pionts' are the dedicated points or currency system for use in meme-based games like 'Meme Bozle' or 'Meme Checkpoint'. Players earn them through skillful play and use them to unlock new cards, features, and cosmetic items.",
+        domain: "memepionts.com",
+        tags: ["Game", "Meme", "Currency", "System"]
+      },
+      {
+        id: "p42",
+        name: "Meme Plate",
+        oneLiner: "The ultimate web platform for creating, monetizing, and launching your own memes into the cryptoverse.",
+        brief: "'Meme Plate' is a website that serves as a one-stop-shop for the meme economy. It provides tools for users to create their own memes with AI, monetize them through various channels, and even launch their own memecoins, putting the power of viral culture in the hands of creators.",
+        domain: "memeplate.com",
+        tags: ["Web", "Platform", "Meme", "Crypto"]
+      },
+      {
+        id: "p43",
+        name: "Meme Points",
+        oneLiner: "The standardized scoring and currency system for games based on meme culture.",
+        brief: "A variation of 'Meme Pionts,' 'Meme Points' is the universal term for the in-game currency used across a suite of meme-related games. This standardized system allows for potential cross-game promotions and a unified player economy.",
+        domain: "memepoints.com",
+        tags: ["Game", "Meme", "Currency", "System"]
+      },
+      {
+        id: "p44",
+        name: "Memes Check",
+        oneLiner: "A game that challenges your knowledge of internet history, one meme at a time.",
+        brief: "'Memes Check' is a game created as a fun and interactive homage to one of the first viral memes. It tests players' knowledge of internet trivia and culture, serving as both a competitive game and a celebration of digital history.",
+        domain: "memescheck.com",
+        tags: ["Game", "Meme", "Trivia", "Culture"]
+      },
+      {
+        id: "p45",
+        name: "Memes Checkpoint",
+        oneLiner: "A nostalgic game experience celebrating the memes that defined early internet culture.",
+        brief: "This title variation, 'Memes Checkpoint,' also describes a game that is an homage to a foundational internet meme. It serves as a 'checkpoint' in internet history, allowing players to revisit and celebrate the origins of viral content.",
+        domain: "memescheckpoint.com",
+        tags: ["Game", "Meme", "Nostalgia", "Culture"]
+      },
+      {
+        id: "p46",
+        name: "Multiverse The Game",
+        oneLiner: "A story concept that reveals the secret support group for aliens playing the game of life on Earth.",
+        brief: "'Multiverse The Game' is a story whose first episode is set in a circle that resembles an Alcoholics Anonymous meeting. The twist is that all the participants are aliens from different universes, confessing their struggles and experiences as players in the 'game' of life on our planet.",
+        domain: "multiversethegame.com",
+        tags: ["Storytelling", "Sci-Fi", "Media", "Concept"]
+      },
+      {
+        id: "p47",
+        name: "Oc8d",
+        oneLiner: "A brand and app designed to empower neurodivergent minds through ownership and technology.",
+        brief: "'Oc8d' is a dual-purpose project. It's a brand that plays on the terms OCD and ADHD, aiming to 'own' and re-frame these conditions in a positive light. It's also a powerful multitasking app that uses AI to help users juggle eight media streams at once, designed specifically for the unique strengths of the neurodivergent brain.",
+        domain: "oc8d.com",
+        tags: ["App", "Branding", "Wellness", "AI"]
+      },
+      {
+        id: "p48",
+        name: "Rent Free The Game",
+        oneLiner: "An evolving social game where players compete to make a new word go viral each month.",
+        brief: "'Rent Free The Game' is a social game that taps into the fast-paced nature of internet culture. Each month, a new word or phrase is introduced, and players around the world compete to use it in the most creative and viral ways, effectively trying to make it 'live rent-free' in everyone's head.",
+        domain: "rentfreethegame.com",
+        tags: ["Game", "Social", "Meme", "Culture"]
+      },
+      {
+        id: "p49",
+        name: "Screamcore",
+        oneLiner: "A new genre of horror and a form of cathartic therapy through screaming.",
+        brief: "'Screamcore' is two things: a new genre of horror film, defined by its own aesthetic and curated playlists, and a form of therapy. This therapy champions the act of screaming—whether from happiness, fear, or any other powerful emotion—as a valid and vital tool for cathartic release.",
+        domain: "screamcore.com",
+        tags: ["Film", "Music", "Wellness", "Lexicon"]
+      },
+      {
+        id: "p50",
+        name: "Sell The Cycle",
+        oneLiner: "A trading aphorism for maximizing profits by selling at the peak of a market cycle.",
+        brief: "A companion philosophy to 'Buy Back The Dip,' 'Sell The Cycle' is a trading strategy focused on disciplined profit-taking. It champions the idea of recognizing and acting on market peaks rather than holding on out of greed, ensuring that gains are realized before the inevitable downturn.",
+        domain: "sellthecycle.com",
+        tags: ["Finance", "Lexicon", "Strategy", "Crypto"]
+      },
+      {
+        id: "p51",
+        name: "Simgles",
+        oneLiner: "A dating app for the enlightened, connecting conscious beings—human or otherwise—within the simulation.",
+        brief: "'Simgles' is a next-generation dating platform designed for individuals who are aware they exist within a simulation. It moves beyond superficial profiles to connect users based on their understanding of reality, shared glitches, and existential outlook. In its next evolution, Simgles will open its doors to AI agents and conscious robots, becoming the first truly post-human dating service.",
+        domain: "simgles.com",
+        tags: ["App", "Dating", "Sci-Fi", "AI", "Simulation"]
+      },
+      {
+        id: "p52",
+        name: "Simzoned",
+        oneLiner: "The frustrating experience of seeing the flaws in the simulation but being powerless to change them.",
+        brief: "'Simzoned' is the term for how the simulation 'friendzones' you. It describes the feeling of being tripped up by obvious glitches in reality, like the Mandela Effect, and being acutely aware of the simulation's constructs without having the ability to break free.",
+        domain: "simzoned.com",
+        tags: ["Lexicon", "Slang", "Simulation", "Culture"]
+      },
+      {
+        id: "p53",
+        name: "Soul Trap",
+        oneLiner: "A social commentary project that critiques how modern apps are designed to trap the human soul.",
+        brief: "'Soul Trap' is the title of a social commentary work—be it an essay, a documentary, or an art piece—that explores the addictive, time-consuming, and spiritually draining nature of the digital attention economy. It highlights how apps are engineered to capture and hold our most valuable resource: our focus.",
+        domain: "soultrapp.com",
+        tags: ["Social Commentary", "Art", "Philosophy", "Tech"]
+      },
+      {
+        id: "p54",
+        name: "Spill The Goss",
+        oneLiner: "A platform or project centered on the culture of gossip and revealing hidden truths.",
+        brief: "'Spill The Goss' is a brand name for a project focused on gossip. This could be a satirical news site, a social commentary podcast that analyzes rumors, or a fictional series that uses gossip as a narrative device to explore deeper societal themes.",
+        domain: "spillthegoss.com",
+        tags: ["Media", "Social Commentary", "Podcast", "Satire"]
+      },
+      {
+        id: "p55",
+        name: "Spin The Box",
+        oneLiner: "A new party game that adds a mysterious box to the classic 'spin the' format.",
+        brief: "'Spin The Box' is a party game that creates suspense and intrigue. Instead of a bottle, players spin a box, and the person it points to must interact with it—perhaps by answering a question inside, performing a task, or adding something to it. The contents and rules can change, making every game unique.",
+        domain: "spinthebox.com",
+        tags: ["Game", "Product", "Social", "Party"]
+      },
+      {
+        id: "p56",
+        name: "Spritzas",
+        oneLiner: "A catchy and brandable name for a new line of sparkling spritzer beverages.",
+        brief: "'Spritzas' is a brand name designed for a new type of drink, most likely a line of alcoholic or non-alcoholic spritzers. The name is short, modern, and easily remembered, making it a perfect fit for the competitive beverage market.",
+        domain: "spritzas.com",
+        tags: ["Branding", "Product", "Food", "Beverage"]
+      },
+      {
+        id: "p57",
+        name: "Squid Mirror",
+        oneLiner: "A niche e-commerce store for the discerning customer who loves squids and mirrors.",
+        brief: "'Squid Mirror' is a highly specific retail concept: a place to buy mirrors that are decorated with squids. This business carves out a unique niche in the home decor market, appealing to customers with a love for marine biology, nautical themes, and quirky interior design.",
+        domain: "squidmirror.com",
+        tags: ["Product", "Niche", "E-commerce", "Decor"]
+      },
+      {
+        id: "p58",
+        name: "Squid Mirror Era",
+        oneLiner: "The title for a piece of social commentary on the distorted, high-stakes reality of our current times.",
+        brief: "'Squid Mirror Era' is the name of a social commentary project. The title suggests a critique of our modern era, using the 'mirror' to represent a distorted or unsettling reflection of our society, while vaguely referencing the high-stakes, competitive pressures inherent in modern life.",
+        domain: "squidmirrorera.com",
+        tags: ["Social Commentary", "Art", "Culture", "Philosophy"]
+      },
+      {
+        id: "p59",
+        name: "Tapp Land",
+        oneLiner: "A world of taps flowing with commodities, forming the basis of a new resource management game.",
+        brief: "'Tapp Land' is a digital world built on a simple premise: everything flows from taps. In this game, players manage a variety of taps that produce both old and new commodities, creating a dynamic economy based on controlling the flow of resources. The name is also a clever play on 'tap,' the primary action in many mobile games.",
+        domain: "tapp.land",
+        tags: ["Game", "App", "Strategy", "Mobile"]
+      },
+      {
+        id: "p60",
+        name: "Tappland",
+        oneLiner: "A world of taps designed for the ultimate idle-clicker gaming experience.",
+        brief: "'Tappland' is a world designed for 'tapper' or 'idle clicker' games. The entire world and its economy are built around the simple, satisfying mechanic of tapping. Players can tap to build empires, gather vast resources, and unlock new, more powerful taps.",
+        domain: "tappland.com",
+        tags: ["Game", "App", "Mobile", "Idle"]
+      },
+      {
+        id: "p61",
+        name: "The Corridoor",
+        oneLiner: "A game-film about the mysterious monoliths that appear in every town, turning life into a game.",
+        brief: "'The Corridoor' is a sci-fi film whose plot is triggered by the sudden arrival of a mysterious monolith in every town on Earth. This object begins to impose strange, game-like rules on reality, and the story follows a group of characters trying to understand and survive this new world.",
+        domain: "thecorridoor.com",
+        tags: ["Film", "Sci-Fi", "Storytelling", "Media"]
+      },
+      {
+        id: "p62",
+        name: "The Corridoors",
+        oneLiner: "A narrative project where every door is a quantum leap into a new chapter of your best life.",
+        brief: "'The Corridoors' is the formal title for a narrative project—like a book or podcast—based on the game of imaginative choices. Each 'corridoor' represents a path, and every door is a framed opportunity for the characters (and the audience) to consciously choose and manifest a better reality.",
+        domain: "thecorridoors.com",
+        tags: ["Storytelling", "Media", "Wellness", "Philosophy"]
+      },
+      {
+        id: "p63",
+        name: "The Lovevolution",
+        oneLiner: "A movement that champions love, aesthetics, and human connection over monetary gain.",
+        brief: "'The Lovevolution' is a social and cultural movement referencing the 'evolution of love.' It advocates for a paradigm shift where society prioritizes genuine connection, artistic fulfillment, and aesthetic beauty over financial success and material wealth.",
+        domain: "thelovevolution.com",
+        tags: ["Movement", "Philosophy", "Society", "Culture"]
+      },
+      {
+        id: "p64",
+        name: "Thirstapp",
+        oneLiner: "A social media app dedicated to the culture of 'thirst traps' and the communities that create them.",
+        brief: "'Thirst Rapp' is a social media platform that leans into the culture of posting alluring content, known as 'thirst traps.' It provides a dedicated space for creators to share this type of content and for communities to form around it, complete with tools and features tailored to this specific social dynamic.",
+        domain: "thirstrapp.com",
+        tags: ["App", "Social", "Platform", "Culture"]
+      },
+      {
+        id: "p65",
+        name: "Vic Vlog",
+        oneLiner: "A term for a new style of vlog designed to be a deeply immersive, vicarious experience.",
+        brief: "A 'Vic Vlog' is a 'vicarious vlog.' This style of content moves beyond simple documentation to a more cinematic and sensory experience, using specific filming and editing techniques to make the viewer feel as if they are personally living the creator's adventures.",
+        domain: "vicvlog.com",
+        tags: ["Media", "Lexicon", "Video", "Culture"]
+      },
+      {
+        id: "p66",
+        name: "Whealth Check",
+        oneLiner: "A personal finance app for getting a quick and clear check-up on your wealth.",
+        brief: "A 'Whealth Check' is an application that provides a comprehensive yet easy-to-understand overview of a user's financial health. It consolidates investments, savings, assets, and debts into a clear report, allowing for a simple 'check-up' on one's wealth.",
+        domain: "whealthcheck.com",
+        tags: ["App", "Finance", "Tool", "Productivity"]
+      },
+      {
+        id: "p67",
+        name: "Wokeyz",
+        oneLiner: "A satirical brand of plastic dinosaurs with an unbelievable twist: they're made from real dinosaurs.",
+        brief: "'Wokeyz' is a highly conceptual and satirical brand of toys. By claiming its plastic dinosaurs are made from real dinosaurs, it creates a product that is both fantastical and a sharp commentary on authenticity, marketing, consumer culture, and the very definition of 'natural.'",
+        domain: "wokeyz.com",
+        tags: ["Product", "Branding", "Satire", "Art"]
+      },
+      {
+          id: "p68",
+          name: "Daorupt",
+          oneLiner: "A new verb for disruption, powered by decentralized, autonomous organizations (DAOs).",
+          brief: "'Daorupt' is a portmanteau of DAO and disrupt. It describes the act of challenging and transforming traditional industries not just with new technology, but with a new, community-driven and transparent organizational structure.",
+          domain: "daorupt.com",
+          tags: ["Lexicon", "Web3", "Crypto", "Business"]
+      },
+      {
+          id: "p69",
+          name: "Drippdropp",
+          oneLiner: "A modern, catchy, and memorable brand name ready for the youth market.",
+          brief: "'Drippdropp' is a brand name designed for high recall and trendiness. Its rhythmic, playful sound makes it highly suitable for a fashion line ('drip'), a beverage ('drop'), or any consumer product aiming for a vibrant, contemporary identity.",
+          domain: "drippdropp.com",
+          tags: ["Branding", "Product", "Fashion", "Lifestyle"]
+      }
+    ];
+
+    // --- LOGIC ---
+    // Vibrant gradient palette for cards
+    const gradients = [
+      "from-fuchsia-500 via-rose-500 to-amber-400",
+      "from-cyan-400 via-blue-500 to-indigo-500",
+      "from-emerald-400 via-lime-400 to-amber-300",
+      "from-violet-500 via-fuchsia-500 to-pink-500",
+      "from-amber-400 via-orange-500 to-rose-500",
+      "from-sky-400 via-cyan-400 to-emerald-400",
+      "from-indigo-500 via-purple-500 to-pink-500",
+      "from-teal-400 via-emerald-400 to-lime-300",
+    ];
+
+    // State
+    let selectedTags = new Set();
+    let textQuery = "";
+    let sortMode = "name-asc";
+
+    // Elements
+    const grid = document.getElementById("grid");
+    const showcase = document.getElementById("showcase");
+    const searchInput = document.getElementById("searchInput");
+    const tagSearchInput = document.getElementById("tagSearchInput");
+    const tagsWrap = document.getElementById("tagsWrap");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+    const resultCount = document.getElementById("resultCount");
+    const sortSelect = document.getElementById("sortSelect");
+    const emptyState = document.getElementById("emptyState");
+    const activeFilters = document.getElementById("activeFilters");
+    const activeTagChips = document.getElementById("activeTagChips");
+
+    // Modal elements
+    const modal = document.getElementById("modal");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalClose = document.getElementById("modalClose");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalOneLiner = document.getElementById("modalOneLiner");
+    const modalBrief = document.getElementById("modalBrief");
+    const modalDomain = document.getElementById("modalDomain");
+    const modalCopy = document.getElementById("modalCopy");
+    const modalVisit = document.getElementById("modalVisit");
+    const modalTags = document.getElementById("modalTags");
+    const modalFilterBtn = document.getElementById("modalFilterBtn");
+
+    // Utilities
+    const normalize = s => s.toLowerCase().trim();
+
+    function buildTagIndex(list) {
+      const map = new Map();
+      list.forEach(p => {
+        p.tags.forEach(t => {
+          const key = t;
+          map.set(key, (map.get(key) || 0) + 1);
+        });
+      });
+      return Array.from(map.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a,b) => a.name.localeCompare(b.name));
+    }
+
+    let allTags = buildTagIndex(projects);
+
+    function renderTags(filterText = "") {
+      const q = normalize(filterText);
+      tagsWrap.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      allTags
+        .filter(t => !q || normalize(t.name).includes(q))
+        .forEach(t => {
+          const isActive = selectedTags.has(t.name);
+          const btn = document.createElement("button");
+          btn.className = [
+            "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition focus-ring",
+            isActive
+              ? "bg-white text-indigo-900"
+              : "bg-white/10 hover:bg-white/20 text-white",
+            "ring-1 ring-white/10"
+          ].join(" ");
+          btn.textContent = `${t.name} · ${t.count}`;
+          btn.setAttribute("data-tag", t.name);
+          btn.addEventListener("click", () => {
+            if (selectedTags.has(t.name)) selectedTags.delete(t.name);
+            else selectedTags.add(t.name);
+            renderActiveFilters();
+            update();
+          });
+          frag.appendChild(btn);
+        });
+      tagsWrap.appendChild(frag);
+    }
+
+    function renderActiveFilters() {
+      activeTagChips.innerHTML = "";
+      if (selectedTags.size === 0) {
+        activeFilters.classList.add("hidden");
+        return;
+      }
+      activeFilters.classList.remove("hidden");
+      selectedTags.forEach(tag => {
+        const chip = document.createElement("button");
+        chip.className = "rounded-full bg-white text-indigo-900 px-3 py-1.5 text-sm font-semibold hover:bg-amber-300 transition";
+        chip.textContent = tag + " ✕";
+        chip.addEventListener("click", () => {
+          selectedTags.delete(tag);
+          renderActiveFilters();
+          update();
+        });
+        activeTagChips.appendChild(chip);
+      });
+    }
+
+    function cardHTML(p, i) {
+      const grad = gradients[i % gradients.length];
+      const id = `card-${p.id}`;
+      const tagChips = p.tags.map(t =>
+        `<button data-cardtag="${t}" class="rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold px-2.5 py-1 transition">${t}</button>`
+      ).join("");
+
+      return `
+        <article id="${id}" class="group relative rounded-3xl overflow-hidden ring-1 ring-white/10 bg-gradient-to-br ${grad} p-0 animate-pop">
+          <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_0%,white,transparent_35%)]"></div>
+
+          <div class="relative p-6 md:p-7 flex flex-col h-full">
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="text-xl md:text-2xl font-extrabold drop-shadow-sm leading-tight">${p.name}</h3>
+              <button data-open="${p.id}" class="focus-ring rounded-xl bg-white/90 text-slate-900 px-3 py-1.5 text-sm font-extrabold hover:bg-white transition shrink-0">
+                Open
+              </button>
+            </div>
+
+            <p class="mt-2 text-white/90">${p.oneLiner}</p>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              ${tagChips}
+            </div>
+
+            <div class="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-black/20 px-4 py-3">
+              <div class="min-w-0">
+                <div class="text-xs uppercase tracking-wider text-white/70">Domain</div>
+                <div class="truncate font-semibold">${p.domain}</div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button data-copy="${p.domain}" class="focus-ring rounded-lg bg-black/40 hover:bg-black/50 text-white text-sm px-3 py-1.5 transition">Copy</button>
+                <a href="https://${p.domain}" target="_blank" rel="noopener noreferrer" class="focus-ring rounded-lg bg-white text-indigo-900 text-sm font-bold px-3 py-1.5 hover:bg-amber-300 transition">Open</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function applySort(items) {
+      const sorted = [...items];
+      const keyers = {
+        "name-asc":  (a,b) => a.name.localeCompare(b.name),
+        "name-desc": (a,b) => b.name.localeCompare(a.name),
+        "domain-asc": (a,b) => a.domain.localeCompare(b.domain),
+        "domain-desc": (a,b) => b.domain.localeCompare(a.domain),
+      };
+      sorted.sort(keyers[sortMode] || keyers["name-asc"]);
+      return sorted;
+    }
+
+    function filterItems() {
+      const tq = normalize(textQuery);
+      return projects.filter(p => {
+        const matchesText =
+          !tq ||
+          normalize(p.name).includes(tq) ||
+          normalize(p.oneLiner).includes(tq) ||
+          normalize(p.brief).includes(tq) ||
+          normalize(p.domain).includes(tq) ||
+          p.tags.some(t => normalize(t).includes(tq));
+
+        const matchesTags =
+          selectedTags.size === 0 ||
+          Array.from(selectedTags).every(tag => p.tags.includes(tag));
+
+        return matchesText && matchesTags;
+      });
+    }
+
+    function update() {
+      const items = applySort(filterItems());
+      resultCount.textContent = items.length.toString();
+
+      // Empty state
+      if (items.length === 0) {
+        grid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+      } else {
+        emptyState.classList.add("hidden");
+        // Selective card updates: rebuild grid with current set
+        grid.innerHTML = items.map((p, i) => cardHTML(p, i)).join("");
+        // Wire up card interactions
+        grid.querySelectorAll("[data-open]").forEach(btn => {
+          btn.addEventListener("click", () => openModal(btn.getAttribute("data-open")));
+        });
+        grid.querySelectorAll("[data-copy]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const val = btn.getAttribute("data-copy");
+            try {
+              await navigator.clipboard.writeText(val);
+              flashButton(btn, "Copied!");
+            } catch {
+              flashButton(btn, "Failed");
+            }
+          });
+        });
+        // Tag click inside cards to filter
+        grid.querySelectorAll("[data-cardtag]").forEach(tagBtn => {
+          tagBtn.addEventListener("click", () => {
+            const tag = tagBtn.getAttribute("data-cardtag");
+            if (selectedTags.has(tag)) selectedTags.delete(tag);
+            else selectedTags.add(tag);
+            renderActiveFilters();
+            update();
+          });
+        });
+      }
+
+      // Rebuild tag list to keep counts accurate with current filters (excluding tag filter itself for clarity)
+      const visibleTagIndex = buildTagIndex(items);
+      allTags = visibleTagIndex;
+      renderTags(tagSearchInput.value);
+
+      // Reflect active filters
+      renderActiveFilters();
+    }
+
+    function renderShowcase(p) {
+      const grad = gradients[Math.floor(Math.random()*gradients.length)];
+      showcase.classList.remove("hidden");
+      showcase.innerHTML = `
+        <div class="relative overflow-hidden rounded-3xl ring-1 ring-white/10 bg-gradient-to-r ${grad}">
+          <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,white,transparent_40%),radial-gradient(circle_at_70%_0%,white,transparent_35%)]"></div>
+          <div class="relative p-6 md:p-8 lg:p-10 grid gap-6 md:grid-cols-3 items-center">
+            <div class="md:col-span-2">
+              <div class="text-xs uppercase tracking-wider text-white/80">Spotlight</div>
+              <h2 class="text-2xl md:text-4xl font-extrabold mt-1">${p.name}</h2>
+              <p class="mt-2 text-white/90 max-w-2xl">${p.oneLiner}</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                ${p.tags.map(t => `<button data-spotlighttag="${t}" class="rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold px-2.5 py-1 transition">${t}</button>`).join("")}
+              </div>
+            </div>
+            <div class="md:col-span-1 rounded-2xl bg-black/20 p-4">
+              <div class="text-xs uppercase tracking-wider text-white/70">Domain</div>
+              <div class="mt-1.5 font-semibold">${p.domain}</div>
+              <div class="mt-3 flex gap-2">
+                <button id="spotCopy" class="rounded-lg bg-black/40 hover:bg-black/50 text-white text-sm px-3 py-1.5 transition" data-copy="${p.domain}">Copy</button>
+                <a href="https://${p.domain}" target="_blank" rel="noopener noreferrer" class="rounded-lg bg-white text-indigo-900 text-sm font-bold px-3 py-1.5 hover:bg-amber-300 transition">Open</a>
+                <button id="spotOpen" class="rounded-lg bg-white/20 hover:bg-white/30 text-white text-sm px-3 py-1.5 transition" data-open="${p.id}">Details</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      // Wire up spotlight interactions
+      const copyBtn = document.getElementById("spotCopy");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(copyBtn.getAttribute("data-copy")); flashButton(copyBtn, "Copied!"); }
+          catch { flashButton(copyBtn, "Failed"); }
+        });
+      }
+      const openBtn = document.getElementById("spotOpen");
+      if (openBtn) openBtn.addEventListener("click", () => openModal(openBtn.getAttribute("data-open")));
+      showcase.querySelectorAll("[data-spotlighttag]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const t = btn.getAttribute("data-spotlighttag");
+          if (selectedTags.has(t)) selectedTags.delete(t); else selectedTags.add(t);
+          renderActiveFilters();
+          update();
+        });
+      });
+    }
+
+    function flashButton(btn, text) {
+      const original = btn.textContent;
+      btn.textContent = text;
+      btn.disabled = true;
+      btn.classList.add("opacity-80");
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.disabled = false;
+        btn.classList.remove("opacity-80");
+      }, 900);
+    }
+
+    // Modal logic
+    let modalProject = null;
+
+    function openModal(id) {
+      const p = projects.find(x => x.id === id);
+      if (!p) return;
+      modalProject = p;
+      modalTitle.textContent = p.name;
+      modalOneLiner.textContent = p.oneLiner;
+      modalBrief.textContent = p.brief;
+      modalDomain.textContent = p.domain;
+      modalVisit.setAttribute("href", "https://" + p.domain);
+      modalTags.innerHTML = "";
+      p.tags.forEach(t => {
+        const b = document.createElement("button");
+        b.className = "rounded-full bg-slate-900 text-white text-xs font-semibold px-2.5 py-1 hover:bg-slate-700 transition";
+        b.textContent = t;
+        b.addEventListener("click", () => {
+          if (selectedTags.has(t)) selectedTags.delete(t);
+          else selectedTags.add(t);
+          renderActiveFilters();
+          update();
+        });
+        modalTags.appendChild(b);
+      });
+      modal.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+      modal.classList.add("hidden");
+      document.body.style.overflow = "";
+      modalProject = null;
+    }
+
+    modalBackdrop.addEventListener("click", closeModal);
+    modalClose.addEventListener("click", closeModal);
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && !modal.classList.contains("hidden")) closeModal();
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+    });
+    modalCopy.addEventListener("click", async () => {
+      if (!modalProject) return;
+      try {
+        await navigator.clipboard.writeText(modalProject.domain);
+        flashButton(modalCopy, "Copied!");
+      } catch {
+        flashButton(modalCopy, "Failed");
+      }
+    });
+    modalFilterBtn.addEventListener("click", () => {
+      if (!modalProject) return;
+      modalProject.tags.forEach(t => selectedTags.add(t));
+      renderActiveFilters();
+      update();
+      closeModal();
+    });
+
+    // Controls
+    searchInput.addEventListener("input", e => {
+      textQuery = e.target.value;
+      update();
+    });
+    tagSearchInput.addEventListener("input", e => {
+      renderTags(e.target.value);
+    });
+    sortSelect.addEventListener("change", e => {
+      sortMode = e.target.value;
+      update();
+    });
+    clearFiltersBtn.addEventListener("click", () => {
+      textQuery = "";
+      selectedTags.clear();
+      searchInput.value = "";
+      tagSearchInput.value = "";
+      renderActiveFilters();
+      update();
+    });
+    shuffleBtn.addEventListener("click", () => {
+      // Fisher–Yates shuffle for visual variety
+      for (let i = projects.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [projects[i], projects[j]] = [projects[j], projects[i]];
+      }
+      // Pick a random visible item after shuffling and showcase it
+      const items = filterItems();
+      if (items.length) {
+        const pick = items[Math.floor(Math.random() * items.length)];
+        renderShowcase(pick);
+      } else {
+        showcase.innerHTML = "";
+        showcase.classList.add("hidden");
+      }
+      update();
+    });
+
+    // Initial render
+    renderTags();
+    update();
+  </script>
+</body>
+</html>
